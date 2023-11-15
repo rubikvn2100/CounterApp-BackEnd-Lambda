@@ -1,6 +1,4 @@
-from handlers.handle_fetch_counter import handle_fetch_counter
-from handlers.handle_update_counter import handle_update_counter
-from handlers.handle_create_session import handle_create_session
+from handlers import *
 
 route_handlers = {
     ("GET", "/api/counter"): handle_fetch_counter,
