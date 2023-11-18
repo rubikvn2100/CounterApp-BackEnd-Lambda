@@ -84,3 +84,19 @@ class SessionManager:
         self.session.set_end_timestamp(item["endTs"])
 
         return {"statusCode": 200}
+
+    def fetch_counter(self) -> dict:
+        if not self.session:
+            return {"statusCode": 400, "body": json.dumps("Bad request")}
+
+        get_counter_response = self.table.update_item(
+            Key={"id": "counter"},
+            UpdateExpression="SET #val = if_not_exists(#val, :default)",
+            ExpressionAttributeNames={"#val": "clickCount"},
+            ExpressionAttributeValues={":default": 0},
+            ReturnValues="ALL_NEW",
+        )
+
+        click_count = int(get_counter_response["Attributes"]["clickCount"])
+
+        return {"statusCode": 200, "body": json.dumps({"counter": click_count})}

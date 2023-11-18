@@ -2,7 +2,11 @@ import json
 import os
 import pytest
 from src.api_handler.session_management.session_manager import SessionManager
-from test_util import create_expired_session_token, create_valid_session_token
+from test_util import (
+    create_expired_session_token,
+    create_valid_session_token,
+    set_counter,
+)
 
 
 def test_init_session_manager():
@@ -134,3 +138,34 @@ def test_validate_session_with_valid_token_and_not_expired():
     response = session_manager.validate_session()
 
     assert response["statusCode"] == 200
+
+
+def test_fetch_counter_bad_request():
+    event = {}
+
+    session_manager = SessionManager(event)
+    session_manager.validate_session()
+    response = session_manager.fetch_counter()
+
+    response_body = json.loads(response["body"])
+
+    assert response["statusCode"] == 400
+    assert response_body == "Bad request"
+
+
+def test_fetch_counter_successful():
+    counter = 100
+    set_counter(counter)
+
+    token = create_valid_session_token()
+
+    event = {"headers": {"Authorization": f"Bearer {token}"}}
+
+    session_manager = SessionManager(event)
+    session_manager.validate_session()
+    response = session_manager.fetch_counter()
+
+    response_body = json.loads(response["body"])
+
+    assert response["statusCode"] == 200
+    assert response_body["counter"] == counter
