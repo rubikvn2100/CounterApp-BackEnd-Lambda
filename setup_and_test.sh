@@ -10,6 +10,10 @@ black src/ tests/
 
 export PYTHONPATH="$(pwd)/src/api_handler:$PYTHONPATH"
 
-pytest
-
-deactivate
+if pytest; then
+  deactivate
+  exit 0
+else
+  deactivate
+  exit 1
+fi
