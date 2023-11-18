@@ -4,6 +4,8 @@ import os
 from .session import Session
 from botocore.exceptions import ClientError
 from decimal import Decimal
+from typing import Optional
+from util import get_current_time
 
 
 class SessionManager:
@@ -16,8 +18,9 @@ class SessionManager:
         self.event = event
         self.session = None
 
-    def get_primary_key(self) -> str:
-        token = self.session.get_token()
+    def get_primary_key(self, token: Optional[str] = None) -> str:
+        if not token:
+            token = self.session.get_token()
 
         return f"TOK#{token}"
 
@@ -52,3 +55,32 @@ class SessionManager:
             "statusCode": 200,
             "body": json.dumps({"token": self.session.get_token()}),
         }
+
+    def validate_session(self) -> dict:
+        try:
+            token_header = self.event.get("headers", {}).get("Authorization")
+            if not token_header or not token_header.startswith("Bearer "):
+                raise ValueError("Invalid or missing Authorization header")
+
+            token = token_header.split(" ")[1]
+        except Exception as e:
+            print(f"Error while extracting token:: {e}")
+
+            return {"statusCode": 401, "body": json.dumps("Unauthorized")}
+
+        response = self.table.get_item(Key={"id": self.get_primary_key(token)})
+        item = response.get("Item")
+
+        if not item:
+            return {"statusCode": 404, "body": json.dumps("Token not found")}
+
+        if get_current_time() > item["endTs"]:
+            return {"statusCode": 403, "body": json.dumps("Token expired")}
+
+        self.session = Session()
+
+        self.session.set_token(token)
+        self.session.set_start_timestamp(item["startTs"])
+        self.session.set_end_timestamp(item["endTs"])
+
+        return {"statusCode": 200}
