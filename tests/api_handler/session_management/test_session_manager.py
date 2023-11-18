@@ -1,10 +1,8 @@
-import boto3
 import json
 import os
 import pytest
-from decimal import Decimal
 from src.api_handler.session_management.session_manager import SessionManager
-from util import get_current_time
+from test_util import create_expired_session_token, create_valid_session_token
 
 
 def test_init_session_manager():
@@ -114,16 +112,7 @@ def test_validate_session_token_not_found():
 
 
 def test_validate_session_token_expired():
-    token = "12345678901234567890123456789012"
-
-    item = {
-        "id": {"S": f"TOK#{token}"},
-        "startTs": {"N": str(Decimal("0"))},
-        "endTs": {"N": str(Decimal("0"))},
-    }
-
-    dynamodb = boto3.client("dynamodb")
-    dynamodb.put_item(TableName=os.environ["TABLE_NAME"], Item=item)
+    token = create_expired_session_token()
 
     event = {"headers": {"Authorization": f"Bearer {token}"}}
 
@@ -137,19 +126,7 @@ def test_validate_session_token_expired():
 
 
 def test_validate_session_with_valid_token_and_not_expired():
-    token = "12345678901234567890123456789012"
-
-    current_time = get_current_time()
-    session_duration = int(os.environ["SESSION_DURATION"])
-
-    item = {
-        "id": {"S": f"TOK#{token}"},
-        "startTs": {"N": str(current_time)},
-        "endTs": {"N": str(current_time + session_duration)},
-    }
-
-    dynamodb = boto3.client("dynamodb")
-    dynamodb.put_item(TableName=os.environ["TABLE_NAME"], Item=item)
+    token = create_valid_session_token()
 
     event = {"headers": {"Authorization": f"Bearer {token}"}}
 
