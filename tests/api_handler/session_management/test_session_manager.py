@@ -6,6 +6,8 @@ from test_util import (
     create_expired_session_token,
     create_valid_session_token,
     set_counter,
+    get_counter,
+    get_session,
 )
 from util import get_current_time
 
@@ -253,3 +255,33 @@ def test_validate_user_activity_successful():
     response = session_manager.validate_user_activity()
 
     assert response["statusCode"] == 200
+
+
+def test_update_counter_successful():
+    counter = 100
+    set_counter(counter)
+
+    token = create_valid_session_token()
+
+    current_time = float(get_current_time())
+    timestamps = []
+
+    N = 5
+    for i in range(1, N + 1):
+        timestamps.append(current_time + 0.15 * i)
+
+    event = {
+        "headers": {"Authorization": f"Bearer {token}"},
+        "body": json.dumps({"timestamps": timestamps}),
+    }
+
+    session_manager = SessionManager(event)
+    session_manager.validate_session()
+    session_manager.validate_user_activity()
+    session_manager.update_counter()
+
+    session = get_session(token)
+    session_click_count = int(session["clickCount"]["N"])
+
+    assert get_counter() == counter + N
+    assert session_click_count == N

@@ -142,3 +142,48 @@ class SessionManager:
         self.session.set_click_count(len(timestamps))
 
         return {"statusCode": 200}
+
+    def update_counter(self) -> None:
+        current_time = get_current_time()
+
+        new_end_timestamp = self.session.calculate_end_timestamp(current_time)
+        self.session.set_end_timestamp(new_end_timestamp)
+
+        click_count = self.session.get_click_count()
+
+        transact_items = [
+            {
+                "Update": {
+                    "TableName": self.table_name,
+                    "Key": {"id": {"S": "counter"}},
+                    "UpdateExpression": "ADD #val :inc",
+                    "ExpressionAttributeNames": {"#val": "clickCount"},
+                    "ExpressionAttributeValues": {":inc": {"N": str(click_count)}},
+                    "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
+                }
+            },
+            {
+                "Update": {
+                    "TableName": self.table_name,
+                    "Key": {"id": {"S": self.get_primary_key()}},
+                    "UpdateExpression": "SET #endTs = :new_endTs ADD #clickCount :inc",
+                    "ExpressionAttributeNames": {
+                        "#endTs": "endTs",
+                        "#clickCount": "clickCount",
+                    },
+                    "ExpressionAttributeValues": {
+                        ":new_endTs": {"N": str(Decimal(str(new_end_timestamp)))},
+                        ":inc": {"N": str(click_count)},
+                    },
+                    "ReturnValuesOnConditionCheckFailure": "ALL_OLD",
+                }
+            },
+        ]
+
+        try:
+            dynamodb_client = boto3.client("dynamodb")
+            response = dynamodb_client.transact_write_items(
+                TransactItems=transact_items
+            )
+        except Exception as e:
+            print(f"Transaction for update counter failed: {e}")
