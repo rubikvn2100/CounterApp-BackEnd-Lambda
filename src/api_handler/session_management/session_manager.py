@@ -5,7 +5,7 @@ from .session import Session
 from botocore.exceptions import ClientError
 from decimal import Decimal
 from typing import Optional
-from util import get_current_time
+from util import get_current_time, is_valid_timestamp_sequence
 
 
 class SessionManager:
@@ -100,3 +100,45 @@ class SessionManager:
         click_count = int(get_counter_response["Attributes"]["clickCount"])
 
         return {"statusCode": 200, "body": json.dumps({"counter": click_count})}
+
+    def validate_user_activity(self) -> dict:
+        try:
+            body = json.loads(self.event.get("body", {}))
+        except Exception as e:
+            print(f"Error extracting timestamps: {e}")
+
+            return {"statusCode": 400, "body": json.dumps("Bad request, no body")}
+
+        try:
+            data = body.get("timestamps")
+            if not data:
+                raise ValueError()
+        except Exception as e:
+            print(f"Error extracting timestamps: {e}")
+
+            return {
+                "statusCode": 400,
+                "body": json.dumps("Bad request, no timestamps"),
+            }
+
+        try:
+            timestamps = [Decimal(str(data_point)) for data_point in data]
+        except Exception as e:
+            print(f"Error extracting timestamps: {e}")
+
+            return {
+                "statusCode": 400,
+                "body": json.dumps(f"Bad request, cannot read timestamps"),
+            }
+
+        start_timestamp = self.session.get_start_timestamp()
+        end_timestamp = self.session.get_end_timestamp()
+        if not is_valid_timestamp_sequence(start_timestamp, end_timestamp, timestamps):
+            return {
+                "statusCode": 422,
+                "body": json.dumps("Request cannot be processed"),
+            }
+
+        self.session.set_click_count(len(timestamps))
+
+        return {"statusCode": 200}

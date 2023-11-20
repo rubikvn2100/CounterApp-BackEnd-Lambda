@@ -7,6 +7,7 @@ from test_util import (
     create_valid_session_token,
     set_counter,
 )
+from util import get_current_time
 
 
 def test_init_session_manager():
@@ -169,3 +170,86 @@ def test_fetch_counter_successful():
 
     assert response["statusCode"] == 200
     assert response_body["counter"] == counter
+
+
+def test_validate_user_activity_no_body():
+    token = create_valid_session_token()
+
+    event = {"headers": {"Authorization": f"Bearer {token}"}}
+
+    session_manager = SessionManager(event)
+    session_manager.validate_session()
+    response = session_manager.validate_user_activity()
+
+    response_body = json.loads(response["body"])
+
+    assert response["statusCode"] == 400
+    assert response_body == "Bad request, no body"
+
+
+def test_validate_user_activity_no_timestamps():
+    token = create_valid_session_token()
+
+    event = {"headers": {"Authorization": f"Bearer {token}"}, "body": json.dumps({})}
+
+    session_manager = SessionManager(event)
+    session_manager.validate_session()
+    response = session_manager.validate_user_activity()
+
+    response_body = json.loads(response["body"])
+
+    assert response["statusCode"] == 400
+    assert response_body == "Bad request, no timestamps"
+
+
+def test_validate_user_activity_unparsable_timestamp():
+    token = create_valid_session_token()
+
+    event = {
+        "headers": {"Authorization": f"Bearer {token}"},
+        "body": json.dumps({"timestamps": ["test"]}),
+    }
+
+    session_manager = SessionManager(event)
+    session_manager.validate_session()
+    response = session_manager.validate_user_activity()
+
+    response_body = json.loads(response["body"])
+
+    assert response["statusCode"] == 400
+    assert response_body == "Bad request, cannot read timestamps"
+
+
+def test_validate_user_activity_invalid_timestamps():
+    token = create_valid_session_token()
+
+    event = {
+        "headers": {"Authorization": f"Bearer {token}"},
+        "body": json.dumps({"timestamps": ["0", "1"]}),
+    }
+
+    session_manager = SessionManager(event)
+    session_manager.validate_session()
+    response = session_manager.validate_user_activity()
+
+    response_body = json.loads(response["body"])
+
+    assert response["statusCode"] == 422
+    assert response_body == "Request cannot be processed"
+
+
+def test_validate_user_activity_successful():
+    token = create_valid_session_token()
+
+    current_time = float(get_current_time())
+
+    event = {
+        "headers": {"Authorization": f"Bearer {token}"},
+        "body": json.dumps({"timestamps": [current_time + 1, current_time + 2]}),
+    }
+
+    session_manager = SessionManager(event)
+    session_manager.validate_session()
+    response = session_manager.validate_user_activity()
+
+    assert response["statusCode"] == 200
