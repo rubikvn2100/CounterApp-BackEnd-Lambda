@@ -3,7 +3,7 @@ import os
 
 
 def get_counter() -> int:
-    dynamodb = boto3.client("dynamodb")
+    dynamodb = boto3.client("dynamodb", region_name=os.environ["AWS_REGION"])
     get_counter_response = dynamodb.get_item(
         TableName=os.environ["TABLE_NAME"],
         Key={"id": {"S": "counter"}},

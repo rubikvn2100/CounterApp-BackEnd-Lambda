@@ -19,7 +19,7 @@ def test_handle_create_session_successful():
     assert response["statusCode"] == 200
     assert len(token) == 32
 
-    dynamodb = boto3.client("dynamodb")
+    dynamodb = boto3.client("dynamodb", region_name=os.environ["AWS_REGION"])
     get_item_response = dynamodb.get_item(
         TableName=os.environ["TABLE_NAME"], Key={"id": {"S": f"TOK#{token}"}}
     )

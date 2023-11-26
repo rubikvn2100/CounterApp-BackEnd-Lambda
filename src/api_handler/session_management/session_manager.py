@@ -10,7 +10,7 @@ from util import get_current_time, is_valid_timestamp_sequence
 
 class SessionManager:
     def __init__(self, event: dict):
-        dynamodb = boto3.resource("dynamodb")
+        dynamodb = boto3.resource("dynamodb", region_name=os.environ["AWS_REGION"])
 
         self.table_name = os.environ["TABLE_NAME"]
         self.table = dynamodb.Table(self.table_name)
@@ -181,7 +181,9 @@ class SessionManager:
         ]
 
         try:
-            dynamodb_client = boto3.client("dynamodb")
+            dynamodb_client = boto3.client(
+                "dynamodb", region_name=os.environ["AWS_REGION"]
+            )
             response = dynamodb_client.transact_write_items(
                 TransactItems=transact_items
             )
