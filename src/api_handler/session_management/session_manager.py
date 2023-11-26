@@ -69,7 +69,7 @@ class SessionManager:
 
             token = token_header.split(" ")[1]
         except Exception as e:
-            print(f"Error while extracting token:: {e}")
+            print(f"Error while extracting token: {e}")
 
             return {"statusCode": 401, "body": json.dumps("Unauthorized")}
 
