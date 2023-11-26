@@ -53,7 +53,12 @@ class SessionManager:
 
         return {
             "statusCode": 200,
-            "body": json.dumps({"token": self.session.get_token()}),
+            "body": json.dumps(
+                {
+                    "token": self.session.get_token(),
+                    "sessionDuration": self.session.get_session_duration(),
+                }
+            ),
         }
 
     def validate_session(self) -> dict:

@@ -68,9 +68,11 @@ def test_create_new_session():
 
     response_body = json.loads(response["body"])
     token = response_body["token"]
+    session_duration = response_body["sessionDuration"]
 
     assert response["statusCode"] == 200
     assert len(token) == 32
+    assert session_duration == int(os.environ["SESSION_DURATION"])
 
     scan_response = session_manager.table.scan()
     item = scan_response["Items"][0]
