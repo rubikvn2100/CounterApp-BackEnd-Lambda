@@ -15,9 +15,7 @@ class Session:
         self.session["clickCount"] = None
 
     def calculate_end_timestamp(self, current_timestamp: Decimal) -> Decimal:
-        session_duration = int(os.environ["SESSION_DURATION"])
-
-        return current_timestamp + session_duration
+        return current_timestamp + self.get_session_duration()
 
     def generate_token(self, event: dict, timestamp: Decimal) -> str:
         identity = event["requestContext"]["identity"]
@@ -43,6 +41,9 @@ class Session:
         self.set_start_timestamp(start_timestamp)
         self.set_end_timestamp(end_timestamp)
         self.set_click_count(0)
+
+    def get_session_duration(self) -> Optional[str]:
+        return int(os.environ["SESSION_DURATION"])
 
     def get_token(self) -> Optional[str]:
         return self.session["token"]

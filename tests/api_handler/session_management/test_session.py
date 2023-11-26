@@ -45,6 +45,7 @@ def test_set_and_get_metho():
     session.set_end_timestamp(end_timestamp)
     session.set_click_count(0)
 
+    assert session.get_session_duration() == int(os.environ["SESSION_DURATION"])
     assert session.get_token() == token
     assert session.get_start_timestamp() == start_timestamp
     assert session.get_end_timestamp() == end_timestamp
