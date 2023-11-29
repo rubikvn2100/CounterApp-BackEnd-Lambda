@@ -8,12 +8,16 @@ def mock_handler(event, context):
     return {"statusCode": 200, "body": "mock response"}
 
 
-mock_route_handlers = {
-    ("TEST", "/test_resource"): mock_handler,
+mock_route_config = {
+    "/test_resource": {
+        "methods": {
+            "TEST": mock_handler,
+        }
+    }
 }
 
 
-@patch("src.api_handler.index.route_handlers", mock_route_handlers)
+@patch("src.api_handler.index.route_config", mock_route_config)
 def test_handle_request():
     event = {"httpMethod": "TEST", "resource": "/test_resource"}
     context = {}
