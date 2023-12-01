@@ -10,8 +10,10 @@ route_config = {
     },
     "/api/counter": {
         "methods": {
+            "OPTIONS": None,
             "GET": handle_fetch_counter,
             "POST": handle_update_counter,
-        }
+        },
+        "allow_headers": ["Authorization"],
     },
 }
