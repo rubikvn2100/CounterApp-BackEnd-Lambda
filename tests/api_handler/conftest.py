@@ -7,6 +7,7 @@ TABLE_NAME = "test_database_table"
 AWS_REGION = "us-west-1"
 SESSION_DURATION = "10"
 ALLOW_ORIGINS = """["https://www.test-domain.com"]"""
+ACCESS_CONTROL_MAX_AGE = "3600"
 
 
 @pytest.fixture(autouse=True)
@@ -23,12 +24,14 @@ def set_mock_aws_lambda_env():
     os.environ["TABLE_NAME"] = TABLE_NAME
     os.environ["SESSION_DURATION"] = SESSION_DURATION
     os.environ["ALLOW_ORIGINS"] = ALLOW_ORIGINS
+    os.environ["ACCESS_CONTROL_MAX_AGE"] = ACCESS_CONTROL_MAX_AGE
 
     yield
 
     del os.environ["TABLE_NAME"]
     del os.environ["SESSION_DURATION"]
     del os.environ["ALLOW_ORIGINS"]
+    del os.environ["ACCESS_CONTROL_MAX_AGE"]
 
 
 @pytest.fixture(autouse=True)
