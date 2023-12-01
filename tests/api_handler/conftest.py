@@ -5,6 +5,7 @@ from moto import mock_dynamodb
 
 TABLE_NAME = "test_database_table"
 AWS_REGION = "us-west-1"
+SESSION_DURATION = "10"
 
 
 @pytest.fixture(autouse=True)
@@ -19,7 +20,7 @@ def set_aws_env():
 @pytest.fixture(autouse=True)
 def set_mock_aws_lambda_env():
     os.environ["TABLE_NAME"] = TABLE_NAME
-    os.environ["SESSION_DURATION"] = "10"
+    os.environ["SESSION_DURATION"] = SESSION_DURATION
 
     yield
 
