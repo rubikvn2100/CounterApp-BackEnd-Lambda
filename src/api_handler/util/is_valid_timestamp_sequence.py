@@ -6,7 +6,7 @@ def is_valid_timestamp_sequence(
     start: Decimal,
     end: Decimal,
     timestamps: List[Decimal],
-    min_duration_threshold: Decimal = Decimal("0.1"),
+    min_duration_threshold: Decimal = Decimal("0.04"),
 ) -> bool:
     len_timestamps = len(timestamps)
 
